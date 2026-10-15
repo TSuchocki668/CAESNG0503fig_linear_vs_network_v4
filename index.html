@@ -2,316 +2,587 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Redundancy determines what survives a disturbance</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>When a Feeding Link Is Lost</title>
+
 <style>
   body {
-    font-family: "Anthropic Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    background: #ffffff;
     margin: 0;
-    padding: 24px;
+    padding: 20px;
+    background: white;
+    font-family: Arial, sans-serif;
+    color: #172c30;
   }
-  .figure-wrap { max-width: 1200px; margin: 0 auto; }
-  text { font-family: "Anthropic Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-  .toggle-row { display: flex; justify-content: center; margin-top: 10px; }
-  #toggleBtn {
-    font-family: inherit;
-    font-size: 13px;
-    padding: 6px 16px;
-    border: 1px solid #0F6E56;
-    border-radius: 6px;
-    background: #ffffff;
-    color: #085041;
+
+  main {
+    max-width: 1200px;
+    margin: auto;
+  }
+
+  svg {
+    width: 100%;
+    height: auto;
+  }
+
+  svg text {
+    font-family: Arial, sans-serif;
+    fill: #172c30;
+  }
+
+  .edge {
+    stroke: #2A9D8F;
+    stroke-width: 2;
+    fill: none;
+  }
+
+  .node rect {
+    fill: #e9f5f2;
+    stroke: #2A9D8F;
+    stroke-width: 1.5;
+  }
+
+  .lost {
+    opacity: 0.35;
+  }
+
+  .edge.lost {
+    stroke-dasharray: 5 5;
+  }
+
+  .removed rect {
+    fill: #eeeeee;
+    stroke: #777777;
+  }
+
+  .removed text {
+    fill: #555555;
+  }
+
+  button {
+    display: block;
+    margin: 8px auto 22px;
+    padding: 12px 24px;
+    background: #2A9D8F;
+    border: 0;
+    border-radius: 8px;
+    color: white;
+    font-size: 17px;
     cursor: pointer;
   }
-  #toggleBtn:hover { background: #EDF9F6; }
-  .caption { font-size: 14px; line-height: 1.6; color: #333; margin-top: 20px; max-width: 1000px; }
-  .caption b { color: #1a1a1a; }
-  .tagline { font-size: 12px; font-style: italic; color: #52514E; margin-top: 8px; }
+
+  button:focus-visible {
+    outline: 3px solid #172c30;
+    outline-offset: 3px;
+  }
+
+  p {
+    max-width: 1000px;
+    margin: 16px auto;
+    line-height: 1.6;
+  }
+
+  .figure-label {
+    color: #c00000;
+  }
+
+  #print-layout {
+    display: none;
+  }
+
+  @media print {
+    @page {
+      size: A4 portrait;
+      margin: 12mm;
+    }
+
+    body {
+      padding: 0;
+    }
+
+    button,
+    #status,
+    #interactive-figure {
+      display: none;
+    }
+
+    #print-layout {
+      display: block;
+    }
+
+    #print-layout h2 {
+      font-size: 14px;
+      margin: 0 0 5px;
+    }
+
+    .caption {
+      font-size: 10pt;
+      line-height: 1.35;
+      margin: 8px 0;
+    }
+  }
 </style>
 </head>
+
 <body>
-<div class="figure-wrap">
-<svg width="100%" viewBox="0 0 1200 1120" role="img">
-<title>Linear chains versus networked webs across three domains</title>
-<desc>Top row shows three linear examples growing from a simple base to a single vulnerable endpoint: a grassland food chain, a specialist parasitoid dependent on one caterpillar host, and the Irish potato monoculture that collapsed under blight. Bottom row shows two networked counterparts: a grassland food web with alternative pathways at every level, and a layered food forest system, potatoes, corn, squash, and beans at ground level, blueberry bushes as a shrub layer, fruit trees as a canopy layer, where a blight affecting only the potatoes still leaves a harvest. A toggle demonstrates a disturbance moving through both linear chains and rerouting through both networks.</desc>
+<main>
+  <div id="interactive-figure"></div>
 
-<defs>
-  <marker id="arrowTeal" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-    <path d="M2 1L8 5L2 9" fill="#1D9E75"/>
-  </marker>
-  <marker id="arrowTealBold" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-    <path d="M2 1L8 5L2 9" fill="#0F6E56"/>
-  </marker>
-  <marker id="arrowGray" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-    <path d="M2 1L8 5L2 9" fill="#B0B0B0"/>
-  </marker>
-</defs>
+  <div id="print-layout">
+    <h2>After grasshopper removal</h2>
+  </div>
 
-<!-- ===== TITLE ===== -->
-<text x="600" y="32" text-anchor="middle" font-size="26" font-weight="500" fill="#0B0B0B">Redundancy determines what survives a disturbance</text>
-<text x="600" y="58" text-anchor="middle" font-size="16" fill="#52514E">Linear chains break under stress.</text>
-<text x="600" y="78" text-anchor="middle" font-size="16" fill="#52514E">Networks reroute around it.</text>
+  <button id="toggle" type="button" aria-pressed="false">
+    Remove grasshoppers
+  </button>
 
-<!-- ===== ROW 1 HEADER (left justified) ===== -->
-<text x="60" y="112" text-anchor="start" font-size="16" font-weight="500" fill="#085041">Linear chains: one path, no backup</text>
+  <p id="status" aria-live="polite">
+    All illustrated feeding links are shown.
+  </p>
 
-<!-- Column mini-labels -->
-<text x="200" y="140" text-anchor="middle" font-size="14" font-weight="500" fill="#145045">Grassland food chain</text>
-<text x="600" y="140" text-anchor="middle" font-size="14" font-weight="500" fill="#145045">Specialist parasite</text>
-<text x="1000" y="140" text-anchor="middle" font-size="14" font-weight="500" fill="#145045">Potato monoculture, Ireland 1840s</text>
-
-<!-- ===== COLUMN 1: GRASSLAND CHAIN (x=200) ===== -->
-<line id="arr-c1-e-d" x1="200" y1="472" x2="200" y2="438" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#arrowTeal)"/>
-<line id="arr-c1-d-c" x1="200" y1="394" x2="200" y2="360" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#arrowTeal)"/>
-<line id="arr-c1-c-b" x1="200" y1="316" x2="200" y2="282" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#arrowTeal)"/>
-<line id="arr-c1-b-a" x1="200" y1="238" x2="200" y2="204" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#arrowTeal)"/>
-
-<rect x="130" y="472" width="140" height="44" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1.2"/>
-<text x="200" y="497" text-anchor="middle" font-size="14" font-weight="600" fill="#0F6E56">Grass</text>
-
-<rect id="box-c1-d" x="130" y="394" width="140" height="44" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1.2"/>
-<text id="text-c1-d" x="200" y="419" text-anchor="middle" font-size="14" font-weight="600" fill="#0F6E56">Grasshopper</text>
-<line id="strike-c1-d" x1="136" y1="399" x2="264" y2="433" stroke="#8a8a8a" stroke-width="2" opacity="0"/>
-
-<rect id="box-c1-c" x="130" y="316" width="140" height="44" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1.2"/>
-<text id="text-c1-c" x="200" y="341" text-anchor="middle" font-size="14" font-weight="600" fill="#0F6E56">Frog</text>
-
-<rect id="box-c1-b" x="130" y="238" width="140" height="44" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1.2"/>
-<text id="text-c1-b" x="200" y="263" text-anchor="middle" font-size="14" font-weight="600" fill="#0F6E56">Snake</text>
-
-<rect id="box-c1-a" x="130" y="160" width="140" height="44" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1.2"/>
-<text id="text-c1-a" x="200" y="185" text-anchor="middle" font-size="14" font-weight="600" fill="#0F6E56">Hawk</text>
-
-<!-- ===== COLUMN 2: SPECIALIST PARASITE (x=600) ===== -->
-<line id="arr-c2-e-c" x1="600" y1="472" x2="600" y2="360" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#arrowTeal)"/>
-<line id="arr-c2-c-a" x1="600" y1="316" x2="600" y2="204" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#arrowTeal)"/>
-
-<rect x="530" y="472" width="140" height="44" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1.2"/>
-<text x="600" y="497" text-anchor="middle" font-size="14" font-weight="600" fill="#0F6E56">Milkweed</text>
-
-<rect id="box-c2-c" x="530" y="316" width="140" height="44" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1.2"/>
-<text id="text-c2-c" x="600" y="341" text-anchor="middle" font-size="14" font-weight="600" fill="#0F6E56">Monarch caterpillar</text>
-<line id="strike-c2-c" x1="536" y1="321" x2="664" y2="355" stroke="#8a8a8a" stroke-width="2" opacity="0"/>
-
-<rect id="box-c2-a" x="530" y="160" width="140" height="44" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1.2"/>
-<text id="text-c2-a" x="600" y="185" text-anchor="middle" font-size="14" font-weight="600" fill="#0F6E56">Specialist wasp</text>
-
-<!-- ===== COLUMN 3: POTATO MONOCULTURE (x=1000), always shown collapsed ===== -->
-<line x1="1000" y1="472" x2="1000" y2="360" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#arrowTeal)"/>
-<line x1="1000" y1="316" x2="1000" y2="204" stroke="#BA7517" stroke-width="1.5" marker-end="url(#arrowTeal)"/>
-
-<rect x="930" y="472" width="140" height="44" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1.2"/>
-<text x="1000" y="497" text-anchor="middle" font-size="14" font-weight="600" fill="#0F6E56">One potato variety</text>
-
-<rect x="930" y="316" width="140" height="44" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1.2"/>
-<text x="1000" y="335" text-anchor="middle" font-size="14" font-weight="600" fill="#0F6E56">Nation&#8217;s primary</text>
-<text x="1000" y="351" text-anchor="middle" font-size="12" fill="#0F6E56">food crop</text>
-
-<rect x="930" y="160" width="140" height="44" rx="8" fill="#FAEEDA" stroke="#BA7517" stroke-width="1.2"/>
-<text x="1000" y="179" text-anchor="middle" font-size="14" font-weight="600" fill="#633806">Blight destroys</text>
-<text x="1000" y="195" text-anchor="middle" font-size="12" fill="#633806">the harvest</text>
-
-<!-- Row 1 outcome label -->
-<text id="label-row1" x="600" y="546" text-anchor="middle" font-size="13" font-weight="600" fill="#BA7517" opacity="0">A disturbance breaks every chain downstream of it.</text>
-
-<!-- ===== ROW 2 HEADER (left justified) ===== -->
-<text x="60" y="580" text-anchor="start" font-size="16" font-weight="500" fill="#085041">Networked webs: many paths, built-in backup</text>
-<text x="300" y="648" text-anchor="middle" font-size="14" font-weight="500" fill="#145045">Grassland food web</text>
-<text x="900" y="648" text-anchor="middle" font-size="14" font-weight="500" fill="#145045">Diversified crop system</text>
-
-<!-- ===== WEB 1: GRASSLAND FOOD WEB (x center 300) ===== -->
-<line id="arr-w1-grass-hopper" x1="266" y1="1004" x2="170" y2="964" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#arrowTeal)"/>
-<line id="arr-w1-grass-beetle" x1="300" y1="1004" x2="300" y2="964" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#arrowTeal)"/>
-<line id="arr-w1-grass-moth" x1="334" y1="1004" x2="430" y2="964" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#arrowTeal)"/>
-
-<line id="arr-w1-hopper-frog" x1="170" y1="920" x2="266" y2="880" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#arrowTeal)"/>
-<line id="arr-w1-beetle-frog" x1="300" y1="920" x2="300" y2="880" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#arrowTeal)"/>
-<line id="arr-w1-moth-frog" x1="430" y1="920" x2="334" y2="880" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#arrowTeal)"/>
-
-<line x1="170" y1="836" x2="266" y2="796" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#arrowTeal)"/>
-<line x1="300" y1="836" x2="300" y2="796" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#arrowTeal)"/>
-<line x1="430" y1="836" x2="334" y2="796" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#arrowTeal)"/>
-
-<line x1="170" y1="752" x2="266" y2="712" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#arrowTeal)"/>
-<line x1="300" y1="752" x2="300" y2="712" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#arrowTeal)"/>
-<line x1="430" y1="752" x2="334" y2="712" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#arrowTeal)"/>
-
-<rect x="230" y="1004" width="140" height="44" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1.2"/>
-<text x="300" y="1029" text-anchor="middle" font-size="14" font-weight="600" fill="#0F6E56">Grass</text>
-
-<rect id="box-w1-hopper" x="100" y="920" width="140" height="44" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1.2"/>
-<text id="text-w1-hopper" x="170" y="945" text-anchor="middle" font-size="14" font-weight="600" fill="#0F6E56">Grasshopper</text>
-<line id="strike-w1-hopper" x1="106" y1="925" x2="234" y2="959" stroke="#8a8a8a" stroke-width="2" opacity="0"/>
-
-<rect x="230" y="920" width="140" height="44" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1.2"/>
-<text x="300" y="945" text-anchor="middle" font-size="14" font-weight="600" fill="#0F6E56">Beetle</text>
-
-<rect x="360" y="920" width="140" height="44" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1.2"/>
-<text x="430" y="945" text-anchor="middle" font-size="14" font-weight="600" fill="#0F6E56">Moth</text>
-
-<rect x="100" y="836" width="140" height="44" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1.2"/>
-<text x="170" y="861" text-anchor="middle" font-size="14" font-weight="600" fill="#0F6E56">Mouse</text>
-
-<rect x="230" y="836" width="140" height="44" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1.2"/>
-<text x="300" y="861" text-anchor="middle" font-size="14" font-weight="600" fill="#0F6E56">Frog</text>
-
-<rect x="360" y="836" width="140" height="44" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1.2"/>
-<text x="430" y="861" text-anchor="middle" font-size="14" font-weight="600" fill="#0F6E56">Lizard</text>
-
-<rect x="100" y="752" width="140" height="44" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1.2"/>
-<text x="170" y="777" text-anchor="middle" font-size="14" font-weight="600" fill="#0F6E56">Rodent</text>
-
-<rect x="230" y="752" width="140" height="44" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1.2"/>
-<text x="300" y="777" text-anchor="middle" font-size="14" font-weight="600" fill="#0F6E56">Snake</text>
-
-<rect x="360" y="752" width="140" height="44" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1.2"/>
-<text x="430" y="777" text-anchor="middle" font-size="14" font-weight="600" fill="#0F6E56">Bird</text>
-
-<rect x="230" y="668" width="140" height="44" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1.2"/>
-<text x="300" y="693" text-anchor="middle" font-size="14" font-weight="600" fill="#0F6E56">Hawk</text>
-
-<!-- ===== WEB 2: DIVERSIFIED FOOD FOREST SYSTEM (x center 900) ===== -->
-<!-- Ground layer to shrub layer (4-to-1 convergence) -->
-<line id="conn-potatoes" x1="760" y1="1004" x2="900" y2="964" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#arrowTeal)"/>
-<line id="conn-corn" x1="860" y1="1004" x2="900" y2="964" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#arrowTeal)"/>
-<line id="conn-squash" x1="960" y1="1004" x2="900" y2="964" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#arrowTeal)"/>
-<line id="conn-beans" x1="1060" y1="1004" x2="900" y2="964" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#arrowTeal)"/>
-
-<!-- Shrub layer to canopy layer -->
-<line x1="900" y1="920" x2="900" y2="880" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#arrowTeal)"/>
-
-<!-- Canopy layer to harvest (skips one tier for breathing room) -->
-<line x1="900" y1="836" x2="900" y2="712" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#arrowTeal)"/>
-
-<!-- Disturbance line (blight, potato-specific) -->
-<line x1="700" y1="984" x2="1100" y2="984" stroke="#BA7517" stroke-width="1.5" stroke-dasharray="6,4"/>
-<text x="1108" y="988" text-anchor="start" font-size="12" fill="#633806">Blight</text>
-
-<!-- Ground layer: 4 crops -->
-<rect id="box-potatoes" x="715" y="1004" width="90" height="44" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1.2"/>
-<text id="text-potatoes" x="760" y="1029" text-anchor="middle" font-size="13" font-weight="600" fill="#0F6E56">Potatoes</text>
-<line id="strike-potatoes" x1="720" y1="1009" x2="800" y2="1043" stroke="#8a8a8a" stroke-width="2" opacity="0"/>
-
-<rect x="815" y="1004" width="90" height="44" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1.2"/>
-<text x="860" y="1029" text-anchor="middle" font-size="13" font-weight="600" fill="#0F6E56">Corn</text>
-
-<rect x="915" y="1004" width="90" height="44" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1.2"/>
-<text x="960" y="1029" text-anchor="middle" font-size="13" font-weight="600" fill="#0F6E56">Squash</text>
-
-<rect x="1015" y="1004" width="90" height="44" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1.2"/>
-<text x="1060" y="1029" text-anchor="middle" font-size="13" font-weight="600" fill="#0F6E56">Beans</text>
-
-<!-- Shrub layer -->
-<rect x="820" y="920" width="160" height="44" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1.2"/>
-<text x="900" y="939" text-anchor="middle" font-size="14" font-weight="600" fill="#0F6E56">Blueberry bushes</text>
-<text x="900" y="955" text-anchor="middle" font-size="12" fill="#0F6E56">shrub layer</text>
-
-<!-- Canopy layer -->
-<rect x="830" y="836" width="140" height="44" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1.2"/>
-<text x="900" y="855" text-anchor="middle" font-size="14" font-weight="600" fill="#0F6E56">Fruit trees</text>
-<text x="900" y="871" text-anchor="middle" font-size="12" fill="#0F6E56">canopy layer</text>
-
-<!-- Harvest continues -->
-<rect x="830" y="668" width="140" height="44" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1.2"/>
-<text x="900" y="687" text-anchor="middle" font-size="14" font-weight="600" fill="#0F6E56">Harvest</text>
-<text x="900" y="703" text-anchor="middle" font-size="12" fill="#0F6E56">continues</text>
-
-<!-- Row 2 outcome label -->
-<text id="label-row2" x="600" y="1084" text-anchor="middle" font-size="13" font-weight="600" fill="#0F6E56" opacity="0">The same disturbance is absorbed. Alternative paths carry the load.</text>
-
-</svg>
-
-<div class="toggle-row">
-  <button id="toggleBtn" onclick="toggleDisturbance()">Show a disturbance</button>
-</div>
-
-<p class="caption">
-<b>Chain of dependency:</b> each part relies on exactly one other, so a single loss breaks every link that follows it.<br>
-<b>Redundancy:</b> multiple parts perform the same function, so a loss in one is absorbed by the others.<br><br>
-A grasshopper decline collapses the grassland chain above it but barely registers in the grassland web, where beetles and moths keep the frog fed. A parasitoid wasp with only one caterpillar host has no fallback if that host declines. In the 1840s, Ireland's near-total reliance on a single potato variety meant that one strain of blight could destroy the harvest nationwide, contributing to a famine that killed roughly a million people. A food forest growing potatoes alongside corn, squash, beans, blueberry bushes, and fruit trees, like the system beside it, loses the potato crop to blight and still brings in a harvest.
-</p>
-<p class="tagline">Environmental Science through Nature's Genius</p>
-</div>
+  <p class="caption">
+    <strong class="figure-label">Figure B.</strong>
+    These simplified models show feeding relationships, without
+    measuring how much food each prey population supplies.
+    Alternative pathways can help consumers persist after a loss.
+    The same prey can support several consumers, so a loss can
+    affect more than one feeding pathway.
+  </p>
+</main>
 
 <script>
-var disturbed = false;
+const SVG_NS = "http://www.w3.org/2000/svg";
 
-function setNode(boxId, textId, isGray) {
-  var box = document.getElementById(boxId);
-  var text = document.getElementById(textId);
-  if (!box || !text) return;
-  if (isGray) {
-    box.setAttribute('fill', '#EDEDED');
-    box.setAttribute('stroke', '#B0B0B0');
-    text.setAttribute('fill', '#888888');
-  } else {
-    box.setAttribute('fill', '#E1F5EE');
-    box.setAttribute('stroke', '#0F6E56');
-    text.setAttribute('fill', '#0F6E56');
+/*
+  Each node represents an organism or group in this illustrative model.
+  Coordinates describe placement only, not trophic position or scale.
+*/
+const nodes = [
+  {
+    id: "chain-plants",
+    x: 210, y: 650, width: 138,
+    label: "Grasses"
+  },
+  {
+    id: "chain-hopper",
+    x: 210, y: 545, width: 138,
+    label: "Grasshopper",
+    removed: true
+  },
+  {
+    id: "chain-frog",
+    x: 210, y: 440, width: 138,
+    label: "Frog",
+    secondary: true
+  },
+  {
+    id: "chain-snake",
+    x: 210, y: 335, width: 138,
+    label: "Snake",
+    secondary: true
+  },
+  {
+    id: "chain-hawk",
+    x: 210, y: 230, width: 138,
+    label: "Hawk",
+    secondary: true
+  },
+  {
+    id: "web-plants",
+    x: 780, y: 650, width: 240,
+    label: "Grasses and other plants"
+  },
+  {
+    id: "web-hopper",
+    x: 510, y: 535, width: 138,
+    label: "Grasshopper",
+    removed: true
+  },
+  {
+    id: "web-beetle",
+    x: 700, y: 535, width: 160,
+    label: "Plant-eating beetle"
+  },
+  {
+    id: "web-caterpillar",
+    x: 910, y: 535, width: 160,
+    label: "Moth caterpillar"
+  },
+  {
+    id: "web-mouse",
+    x: 510, y: 400, width: 138,
+    label: "Mouse"
+  },
+  {
+    id: "web-frog",
+    x: 700, y: 400, width: 138,
+    label: "Frog"
+  },
+  {
+    id: "web-lizard",
+    x: 910, y: 400, width: 138,
+    label: "Lizard"
+  },
+  {
+    id: "web-bird",
+    x: 1060, y: 300, width: 160,
+    label: "Insect-eating bird"
+  },
+  {
+    id: "web-snake",
+    x: 650, y: 280, width: 138,
+    label: "Snake"
+  },
+  {
+    id: "web-hawk",
+    x: 780, y: 215, width: 138,
+    label: "Hawk"
   }
+];
+
+/*
+  Arrows run from food to consumer.
+  "affected" marks links lost in the grasshopper-removal scenario.
+*/
+const edges = [
+  {
+    path: "M210 627 L210 568",
+    affected: true
+  },
+  {
+    path: "M210 522 L210 463",
+    affected: true
+  },
+  {
+    path: "M210 417 L210 358",
+    affected: true
+  },
+  {
+    path: "M210 312 L210 253",
+    affected: true
+  },
+
+  // Plants to herbivores.
+  {
+    path: "M780 627 L510 558",
+    affected: true
+  },
+  {
+    path: "M780 627 L700 558"
+  },
+  {
+    path: "M780 627 L910 558"
+  },
+
+  // Plants to mouse, routed around the grasshopper box.
+  {
+    path:
+      "M780 627 " +
+      "C650 700 420 680 420 600 " +
+      "L420 470 " +
+      "Q420 435 510 423"
+  },
+
+  // Insects to frog.
+  {
+    path: "M510 512 L700 423",
+    affected: true
+  },
+  {
+    path: "M700 512 L700 423"
+  },
+  {
+    path: "M910 512 L700 423"
+  },
+
+  // Insects to lizard.
+  {
+    path: "M510 512 L910 423",
+    affected: true
+  },
+  {
+    path: "M700 512 L910 423"
+  },
+
+  // Insects to bird.
+  {
+    path: "M910 512 L1060 323"
+  },
+  {
+    path: "M700 512 C760 455 1020 495 1060 323"
+  },
+
+  // Prey to snake.
+  {
+    path: "M510 377 L650 303"
+  },
+  {
+    path: "M700 377 L650 303"
+  },
+  {
+    path: "M910 377 L650 303"
+  },
+
+  // Prey to hawk.
+  {
+    path: "M510 377 Q440 220 711 215"
+  },
+  {
+    path: "M650 257 L780 238"
+  },
+  {
+    path: "M1060 277 L780 238"
+  }
+];
+
+function element(name, attributes = {}, text = "") {
+  const el = document.createElementNS(SVG_NS, name);
+
+  Object.entries(attributes).forEach(([key, value]) => {
+    el.setAttribute(key, value);
+  });
+
+  if (text) {
+    el.textContent = text;
+  }
+
+  return el;
 }
 
-function setArrow(id, isGray, bold) {
-  var el = document.getElementById(id);
-  if (!el) return;
-  if (isGray) {
-    el.setAttribute('stroke', '#B0B0B0');
-    el.setAttribute('stroke-width', '1.5');
-    el.setAttribute('stroke-dasharray', '4,4');
-    if (el.getAttribute('marker-end')) el.setAttribute('marker-end', 'url(#arrowGray)');
-  } else if (bold) {
-    el.setAttribute('stroke', '#0F6E56');
-    el.setAttribute('stroke-width', '3');
-    el.removeAttribute('stroke-dasharray');
-    if (el.getAttribute('marker-end')) el.setAttribute('marker-end', 'url(#arrowTealBold)');
-  } else {
-    el.setAttribute('stroke', '#1D9E75');
-    el.setAttribute('stroke-width', '1.5');
-    el.removeAttribute('stroke-dasharray');
-    if (el.getAttribute('marker-end')) el.setAttribute('marker-end', 'url(#arrowTeal)');
-  }
+function addText(svg, x, y, text, options = {}) {
+  svg.appendChild(element("text", {
+    x,
+    y,
+    "font-size": options.size || 15,
+    "text-anchor": options.anchor || "start",
+    ...(options.bold ? { "font-weight": "bold" } : {})
+  }, text));
 }
 
-function toggleDisturbance() {
+function buildFigure(prefix, disturbed) {
+  const svg = element("svg", {
+    viewBox: "0 0 1200 855",
+    role: "img",
+    "aria-labelledby": `${prefix}-title ${prefix}-desc`
+  });
+
+  svg.appendChild(element("title", {
+    id: `${prefix}-title`
+  }, "When a Feeding Link Is Lost"));
+
+  svg.appendChild(element("desc", {
+    id: `${prefix}-desc`
+  },
+    "An imagined single feeding pathway compared with an " +
+    "illustrative food web. Arrows point from food to consumer. " +
+    (
+      disturbed
+        ? "Grasshoppers have been removed. Consumers above the " +
+          "loss in the chain have no food source. The web retains " +
+          "alternative feeding links."
+        : "All illustrated feeding links are present."
+    ) +
+    " The diagram does not measure prey abundance or energy flow."
+  ));
+
+  /*
+    Each SVG owns its arrowhead definition.
+    Print arrows therefore do not depend on the hidden screen figure.
+  */
+  const markerId = `${prefix}-arrow`;
+  const defs = element("defs");
+  const marker = element("marker", {
+    id: markerId,
+    viewBox: "0 0 10 10",
+    refX: 9,
+    refY: 5,
+    markerWidth: 6,
+    markerHeight: 6,
+    orient: "auto"
+  });
+
+  marker.appendChild(element("path", {
+    d: "M0 0 L10 5 L0 10 Z",
+    fill: "#2A9D8F"
+  }));
+
+  defs.appendChild(marker);
+  svg.appendChild(defs);
+
+  svg.appendChild(element("rect", {
+    width: 1200,
+    height: 855,
+    fill: "white"
+  }));
+
+  addText(svg, 55, 48, "When a Feeding Link Is Lost", {
+    size: 30,
+    bold: true
+  });
+
+  addText(
+    svg, 55, 80,
+    "Arrows show energy moving from food to consumer.",
+    { size: 17 }
+  );
+
+  svg.appendChild(element("rect", {
+    x: 40, y: 110,
+    width: 340, height: 620,
+    rx: 16,
+    fill: "#f6f8f7"
+  }));
+
+  svg.appendChild(element("rect", {
+    x: 400, y: 110,
+    width: 760, height: 620,
+    rx: 16,
+    fill: "#f6f8f7"
+  }));
+
+  addText(svg, 210, 150, "One feeding pathway", {
+    size: 21,
+    anchor: "middle",
+    bold: true
+  });
+
+  addText(svg, 780, 150, "Alternative feeding pathways", {
+    size: 21,
+    anchor: "middle",
+    bold: true
+  });
+
+  addText(
+    svg, 210, 177,
+    "An imagined system with no other foods",
+    { size: 14, anchor: "middle" }
+  );
+
+  addText(
+    svg, 780, 177,
+    "An illustrative web with selected links",
+    { size: 14, anchor: "middle" }
+  );
+
+  // Draw arrows first so node labels remain unobstructed.
+  edges.forEach(edge => {
+    svg.appendChild(element("path", {
+      class: `edge${disturbed && edge.affected ? " lost" : ""}`,
+      d: edge.path,
+      "marker-end": `url(#${markerId})`
+    }));
+  });
+
+  nodes.forEach(node => {
+    const classes = ["node"];
+
+    if (disturbed && node.secondary) {
+      classes.push("lost");
+    }
+
+    if (disturbed && node.removed) {
+      classes.push("removed");
+    }
+
+    const group = element("g", {
+      class: classes.join(" ")
+    });
+
+    group.appendChild(element("rect", {
+      x: node.x - node.width / 2,
+      y: node.y - 23,
+      width: node.width,
+      height: 46,
+      rx: 9
+    }));
+
+    group.appendChild(element("text", {
+      x: node.x,
+      y: node.y + 5,
+      "text-anchor": "middle",
+      "font-size": 15
+    }, node.label));
+
+    if (disturbed && node.removed) {
+      group.appendChild(element("path", {
+        d:
+          `M${node.x - 58} ${node.y - 16} ` +
+          `L${node.x + 58} ${node.y + 16} ` +
+          `M${node.x - 58} ${node.y + 16} ` +
+          `L${node.x + 58} ${node.y - 16}`,
+        stroke: "#666666",
+        "stroke-width": 2,
+        fill: "none"
+      }));
+    }
+
+    svg.appendChild(group);
+  });
+
+  if (disturbed) {
+    addText(
+      svg, 210, 700,
+      "Consumers above the loss have no food.",
+      { anchor: "middle" }
+    );
+
+    addText(
+      svg, 780, 700,
+      "Other pathways remain. Is enough suitable prey available?",
+      { anchor: "middle" }
+    );
+  }
+
+  addText(
+    svg, 55, 780,
+    "Grasshoppers are gone. Which 2 other prey types must " +
+    "disappear before the frog has no food left?",
+    { size: 18 }
+  );
+
+  // Left-aligned program tagline.
+  addText(
+    svg, 55, 830,
+    "Environmental Science through Nature’s Genius",
+    { size: 14 }
+  );
+
+  return svg;
+}
+
+let disturbed = false;
+
+const screenContainer = document.getElementById("interactive-figure");
+const printContainer = document.getElementById("print-layout");
+const toggleButton = document.getElementById("toggle");
+const statusText = document.getElementById("status");
+
+function renderScreen() {
+  screenContainer.replaceChildren(
+    buildFigure("screen", disturbed)
+  );
+
+  toggleButton.textContent = disturbed
+    ? "Reset feeding links"
+    : "Remove grasshoppers";
+
+  toggleButton.setAttribute("aria-pressed", String(disturbed));
+
+  statusText.textContent = disturbed
+    ? "Grasshoppers removed. Crosses show the removed species. " +
+      "Dashed arrows show lost links. Faded consumers in the " +
+      "chain have lost their food source."
+    : "All illustrated feeding links are shown.";
+}
+
+toggleButton.addEventListener("click", () => {
   disturbed = !disturbed;
-  document.getElementById('toggleBtn').textContent = disturbed ? 'Reset' : 'Show a disturbance';
+  renderScreen();
+});
 
-  setNode('box-c1-d', 'text-c1-d', disturbed);
-  setNode('box-c1-c', 'text-c1-c', disturbed);
-  setNode('box-c1-b', 'text-c1-b', disturbed);
-  setNode('box-c1-a', 'text-c1-a', disturbed);
-  document.getElementById('strike-c1-d').setAttribute('opacity', disturbed ? '1' : '0');
-  setArrow('arr-c1-e-d', disturbed, false);
-  setArrow('arr-c1-d-c', disturbed, false);
-  setArrow('arr-c1-c-b', disturbed, false);
-  setArrow('arr-c1-b-a', disturbed, false);
+// Print always shows the full-width after-removal view.
+printContainer.appendChild(buildFigure("print", true));
 
-  setNode('box-c2-c', 'text-c2-c', disturbed);
-  setNode('box-c2-a', 'text-c2-a', disturbed);
-  document.getElementById('strike-c2-c').setAttribute('opacity', disturbed ? '1' : '0');
-  setArrow('arr-c2-e-c', disturbed, false);
-  setArrow('arr-c2-c-a', disturbed, false);
-
-  document.getElementById('label-row1').setAttribute('opacity', disturbed ? '1' : '0');
-
-  setNode('box-w1-hopper', 'text-w1-hopper', disturbed);
-  document.getElementById('strike-w1-hopper').setAttribute('opacity', disturbed ? '1' : '0');
-  setArrow('arr-w1-grass-hopper', disturbed, false);
-  setArrow('arr-w1-hopper-frog', disturbed, false);
-  setArrow('arr-w1-grass-beetle', false, disturbed);
-  setArrow('arr-w1-grass-moth', false, disturbed);
-  setArrow('arr-w1-beetle-frog', false, disturbed);
-  setArrow('arr-w1-moth-frog', false, disturbed);
-
-  setNode('box-potatoes', 'text-potatoes', disturbed);
-  document.getElementById('strike-potatoes').setAttribute('opacity', disturbed ? '1' : '0');
-  setArrow('conn-potatoes', disturbed, false);
-  setArrow('conn-corn', false, disturbed);
-  setArrow('conn-squash', false, disturbed);
-  setArrow('conn-beans', false, disturbed);
-
-  document.getElementById('label-row2').setAttribute('opacity', disturbed ? '1' : '0');
-}
+renderScreen();
 </script>
 </body>
 </html>
