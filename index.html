@@ -11,7 +11,7 @@
     padding: 20px;
     background: white;
     font-family: Arial, sans-serif;
-    color: #172c30;
+    color: #000000;
   }
 
   main {
@@ -26,7 +26,7 @@
 
   svg text {
     font-family: Arial, sans-serif;
-    fill: #172c30;
+    fill: #000000;
   }
 
   .edge {
@@ -143,9 +143,8 @@
     <strong class="figure-label">Figure B.</strong>
     These simplified models show feeding relationships, without
     measuring how much food each prey population supplies.
-    Alternative pathways can help consumers persist after a loss.
-    The same prey can support several consumers, so a loss can
-    affect more than one feeding pathway.
+    The same prey can support several consumers, so losing
+    grasshoppers breaks links to both the frog and the lizard.
   </p>
 </main>
 
@@ -159,82 +158,112 @@ const SVG_NS = "http://www.w3.org/2000/svg";
 const nodes = [
   {
     id: "chain-plants",
-    x: 210, y: 650, width: 138,
+    x: 210,
+    y: 650,
+    width: 138,
     label: "Grasses"
   },
   {
     id: "chain-hopper",
-    x: 210, y: 545, width: 138,
+    x: 210,
+    y: 545,
+    width: 138,
     label: "Grasshopper",
     removed: true
   },
   {
     id: "chain-frog",
-    x: 210, y: 440, width: 138,
+    x: 210,
+    y: 440,
+    width: 138,
     label: "Frog",
     secondary: true
   },
   {
     id: "chain-snake",
-    x: 210, y: 335, width: 138,
+    x: 210,
+    y: 335,
+    width: 138,
     label: "Snake",
     secondary: true
   },
   {
     id: "chain-hawk",
-    x: 210, y: 230, width: 138,
+    x: 210,
+    y: 230,
+    width: 138,
     label: "Hawk",
     secondary: true
   },
   {
     id: "web-plants",
-    x: 780, y: 650, width: 240,
+    x: 780,
+    y: 650,
+    width: 240,
     label: "Grasses and other plants"
   },
   {
     id: "web-hopper",
-    x: 510, y: 535, width: 138,
+    x: 510,
+    y: 535,
+    width: 138,
     label: "Grasshopper",
     removed: true
   },
   {
     id: "web-beetle",
-    x: 700, y: 535, width: 160,
+    x: 700,
+    y: 535,
+    width: 160,
     label: "Plant-eating beetle"
   },
   {
     id: "web-caterpillar",
-    x: 910, y: 535, width: 160,
+    x: 910,
+    y: 535,
+    width: 160,
     label: "Moth caterpillar"
   },
   {
     id: "web-mouse",
-    x: 510, y: 400, width: 138,
+    x: 510,
+    y: 400,
+    width: 138,
     label: "Mouse"
   },
   {
     id: "web-frog",
-    x: 700, y: 400, width: 138,
+    x: 700,
+    y: 400,
+    width: 138,
     label: "Frog"
   },
   {
     id: "web-lizard",
-    x: 910, y: 400, width: 138,
+    x: 910,
+    y: 400,
+    width: 138,
     label: "Lizard"
   },
   {
     id: "web-bird",
-    x: 1060, y: 300, width: 160,
+    x: 1060,
+    y: 300,
+    width: 160,
     label: "Insect-eating bird"
   },
   {
     id: "web-snake",
-    x: 650, y: 280, width: 138,
+    x: 650,
+    y: 280,
+    width: 138,
     label: "Snake"
   },
   {
     id: "web-hawk",
-    x: 780, y: 215, width: 138,
+    x: 780,
+    y: 215,
+    width: 138,
     label: "Hawk"
   }
 ];
@@ -426,15 +455,19 @@ function buildFigure(prefix, disturbed) {
   );
 
   svg.appendChild(element("rect", {
-    x: 40, y: 110,
-    width: 340, height: 620,
+    x: 40,
+    y: 110,
+    width: 340,
+    height: 620,
     rx: 16,
     fill: "#f6f8f7"
   }));
 
   svg.appendChild(element("rect", {
-    x: 400, y: 110,
-    width: 760, height: 620,
+    x: 400,
+    y: 110,
+    width: 760,
+    height: 620,
     rx: 16,
     fill: "#f6f8f7"
   }));
@@ -533,9 +566,14 @@ function buildFigure(prefix, disturbed) {
   }
 
   addText(
-    svg, 55, 780,
-    "Grasshoppers are gone. Which 2 other prey types must " +
-    "disappear before the frog has no food left?",
+    svg, 55, 770,
+    "If grasshoppers disappear, which 2 other prey types must also disappear",
+    { size: 18 }
+  );
+
+  addText(
+    svg, 55, 797,
+    "before the frog in the illustrated web has no food left?",
     { size: 18 }
   );
 
